@@ -95,5 +95,17 @@ async def ask_question(question: Question):
         # Handle exceptions and return an HTTP 500 error with the exception message
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/chat_history")
+async def get_chats():
+    try:
+        history = chat.history
+        print(history)
+        return {"history": history}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        
+
 if __name__ == "__main__":
     uvicorn.run("main", host="0.0.0.0", port=8000, log_level="info")
+
+# Run the application with: uvicorn main:app --reload on the terminal    
