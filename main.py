@@ -74,7 +74,7 @@ chat = model.start_chat(history=[])
 app = FastAPI()
 
 origins = [
-    "http://localhost:5173",
+    "https://project-gen-medix-6pc8.vercel.app",
 ]
 
 app.add_middleware(
