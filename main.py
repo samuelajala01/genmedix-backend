@@ -8,9 +8,9 @@ import os
 import google.generativeai as genai
 
 
-GOOGLE_API_KEY = "AIzaSyBSEKNElJc6mfEmDO7sgpkGCooaYaNcYf4"
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-genai.configure(api_key="AIzaSyBSEKNElJc6mfEmDO7sgpkGCooaYaNcYf4")
+genai.configure(api_key=GOOGLE_API_KEY)
 
 
 if GOOGLE_API_KEY:
