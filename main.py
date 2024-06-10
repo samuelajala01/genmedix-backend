@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 import os
@@ -7,9 +8,9 @@ import os
 import google.generativeai as genai
 
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GOOGLE_API_KEY = "AIzaSyBSEKNElJc6mfEmDO7sgpkGCooaYaNcYf4"
 
-genai.configure(api_key=GOOGLE_API_KEY)
+genai.configure(api_key="AIzaSyBSEKNElJc6mfEmDO7sgpkGCooaYaNcYf4")
 
 
 if GOOGLE_API_KEY:
@@ -71,6 +72,19 @@ chat = model.start_chat(history=[])
 ########## API STUFF #############
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 class Question(BaseModel):
     question: str
