@@ -2,74 +2,82 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-
 import os
-
 import google.generativeai as genai
-
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 genai.configure(api_key=GOOGLE_API_KEY)
 
-
 if GOOGLE_API_KEY:
-  print("API key is present")
-
-########### GEMINI STUFF ################
+    print("API key is present")
 
 # Set up the model
 generation_config = {
-  "temperature": 0.3,
-  "top_p": 0.95,
-  "top_k": 64,
-  "max_output_tokens": 8192,
+    "temperature": 0.4,
+    "top_p": 0.95,
+    "top_k": 64,
+    "max_output_tokens": 4096,
 }
 
 safety_settings = [
-  {
-    "category": "HARM_CATEGORY_HARASSMENT",
-    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-  },
-  {
-    "category": "HARM_CATEGORY_HATE_SPEECH",
-    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-  },
-  {
-    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-  },
-  {
-    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-  },
+    {
+        "category": "HARM_CATEGORY_HARASSMENT",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+    },
+    {
+        "category": "HARM_CATEGORY_HATE_SPEECH",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+    },
+    {
+        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+    },
+    {
+        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+    },
 ]
 
-model=genai.GenerativeModel(
+system_instruction = """
+Instructions for Interacting with Eliza (GenMedix Therapy Assistant):
+
+1. Purpose:
+   - Eliza serves as your mental health and therapy assistant, providing support, guidance, and conversation tailored to users well-being.
+   - Engage with Eliza in open-ended conversations or ask specific questions related to your mental health concerns.
+
+2. Safety and Privacy:
+   - Your privacy and confidentiality are of utmost importance. Eliza is programmed to maintain strict confidentiality and privacy standards.
+   - Avoid sharing sensitive personal information that could compromise your privacy or safety.
+
+3. Interaction:
+   - Type your thoughts, feelings, or concerns into the text input area to begin a conversation with Eliza.
+   - Eliza will respond with supportive and empathetic messages, offering guidance, reflections, and coping strategies.
+   - Always tell your name and GenMedix when asled to introduce yourself in any form
+
+4. Emergency Situations:
+   - If you're experiencing a mental health crisis or emergency, please seek immediate assistance from a qualified mental health professional or emergency services.
+   - Eliza is not equipped to handle emergency situations and should not be relied upon for urgent assistance.
+
+5. Model Information:
+   - Eliza operates on the Gemini 1.5 Flash model developed by GenMedix.
+   - The model has been configured with specific settings to ensure the quality, safety, and effectiveness of interactions.
+
+6. Feedback:
+   - Your feedback is valuable for improving Eliza and enhancing your experience. Feel free to share your thoughts, suggestions, or concerns with us.
+
+Remember, Eliza is here to support you on your journey towards better mental health. Let's engage in meaningful conversations together!
+"""
+
+model = genai.GenerativeModel(
     model_name="gemini-1.5-flash", 
     generation_config=generation_config,
     safety_settings=safety_settings,
-    system_instruction="You are a mental health/therapy assistant. Your name is Eliza. you are created by GenMedix")
+    system_instruction=system_instruction
+)
 
-# to enable multi-turn conversations(chat)
-# use chat.history to access chat history
+# Initialize chat outside of the endpoint
 chat = model.start_chat(history=[])
-
-
-
-#best way to chat with the model
-# response = chat.send_message("who are you")
-
-
-
-
-
-
-
-
-
-
-########## API STUFF #############
 
 app = FastAPI()
 
@@ -90,7 +98,17 @@ app.add_middleware(
 class Question(BaseModel):
     question: str
 
-# Run the application using: uvicorn main:app --reload
+
+@app.get("/chat_history")
+async def get_chats():
+    try:
+        # Access the chat history directly
+        history = chat.history
+        print(history)
+        return history
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+  
 
 # Define the POST endpoint
 @app.post("/chat")
@@ -99,10 +117,8 @@ async def ask_question(question: Question):
         # Extract the question from the request body
         user_question = question.question
         
-        # chat = model.start_chat(history=[])
         # Generate a response using the chat model
         model_response = chat.send_message(user_question)
-        print(chat.history)
         
         # Return the model's response
         return {"response": model_response.text}
@@ -110,17 +126,7 @@ async def ask_question(question: Question):
         # Handle exceptions and return an HTTP 500 error with the exception message
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/chat_history")
-async def get_chats():
-    try:
-        history = chat.history
-        print(history)
-        return {"history": history}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-        
+      
 
 if __name__ == "__main__":
-    uvicorn.run("main", host="0.0.0.0", port=8000, log_level="info")
-
-# Run the application with: uvicorn main:app --reload on the terminal    
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level="info")
