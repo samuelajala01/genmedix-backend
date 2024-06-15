@@ -10,7 +10,9 @@ import google.generativeai as genai
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-genai.configure(api_key=GOOGLE_API_KEY)
+# genai.configure(api_key=GOOGLE_API_KEY)
+
+genai.configure(api_key="AIzaSyD34VgcPEWDg5QmG4QjX39CaZdY8fu2KU8")
 
 
 if GOOGLE_API_KEY:
@@ -74,7 +76,7 @@ chat = model.start_chat(history=[])
 app = FastAPI()
 
 origins = [
-    "https://project-gen-medix-6pc8.vercel.app",
+    "https://genmedix.vercel.app",
     "http://localhost:5173"
 ]
 
