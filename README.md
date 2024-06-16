@@ -1,4 +1,4 @@
-# GenMedix
+# Project GenMedix
 Team Dev Titans
 
 ## Table of Contents
